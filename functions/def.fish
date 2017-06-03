@@ -12,6 +12,8 @@ function def -d 'manage fish functions/complitons'
                 set opts $opts erase
             case -l --list
                 set opts $opts list
+            case -r --root
+                set opts $opts root
             case -h --help
                 set opts $opts help
             case --
@@ -40,6 +42,7 @@ OPTIONS:
     -c, --complete  edit/erase/list completions instead of functions
     -e, --erase     erase user defined functions
     -l, --list      list user defined functions 
+    -r, --root      print root directory
     -h, --help      show this help
 "
         return
@@ -51,6 +54,13 @@ OPTIONS:
         set type completion
         set root "$HOME/.config/fish/completions"
         set paths $fisn_complete_path
+    end
+
+    # --root option
+    # print the root path for functions/completions
+    if contains root $opts
+        echo "$root"
+        return
     end
 
     # --list option
