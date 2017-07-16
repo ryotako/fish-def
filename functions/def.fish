@@ -1,40 +1,44 @@
 function def -d 'manage fish functions/complitons'
+
+    set -l key
+    set -l value
     set -l type function
-    set -l root "$HOME/.config/fish/functions"
-    set -l paths $fish_function_path
-    set -l opts
     set -l names
-    while count $argv >/dev/null
-        switch $argv[1]
+    set -l option
+    set -l forced false
+
+    argu {c,complete} {e,erase} {f,force} {l,list} {r,root} {h,help}\
+        -- $argv | while read key value
+        switch $key
+            case _
+                set names $names $value
+
             case -c --complete
-                set opts $opts complete
+                set type completiotn
+
+            case -f --force
+                set forced true
+
             case -e --erase
-                set opts $opts erase
+                set option $option erase
+
             case -l --list
-                set opts $opts list
+                set option $option list
+
             case -r --root
-                set opts $opts root
+                set option $option root
+
             case -h --help
-                set opts $opts help
-            case --
-                if set -q argv[2]
-                    set names $argv[2]
-                    set -e $argv[2]
-                end
-            case '-?' '--*'
-                echo "def: invalid option '$argv[1]'" >/dev/stderr
-                return 1
-            case '-??*'
-                set argv $argv (string join \n -(string split -- '' "$argv[1]"))
-            case '*'
-                set names $names $argv[1]
+                set option $option help
         end
-        set -e argv[1]
     end
 
-    # --help option
-    # show usage and exit
-    if contains help $opts
+    if test -z "$key" # option parsing error
+        return 1
+    end
+
+    # --help option: show usage and exit
+    if contains help $option
         string trim "
 NAME: def - Manage your local function definitions
 
@@ -43,6 +47,7 @@ USAGE: def [options] function ...
 OPTIONS:
     -c, --complete  edit/erase/list completions instead of functions
     -e, --erase     erase user defined functions
+    -f, --force     overwirte function/completion defined by a plugin
     -l, --list      list user defined functions 
     -r, --root      print root directory
     -h, --help      show this help
@@ -50,114 +55,107 @@ OPTIONS:
         return
     end
 
-    # check invalid option combination
-    set -l dups 0
-    contains erase $opts; and set dups (math $dups + 1)
-    contains list  $opts; and set dups (math $dups + 1)
-    contains root  $opts; and set dups (math $dups + 1)
-    if test $dups -gt 1
-        echo "def: invalid combination of options" >/dev/stderr
+    if test (count $option) -lt 1 # default action
+        set option edit
+    else if test (count $option) -gt 1 # check invalid option combination
+        echo "def: invalid combination of options" >&2
         return 1
     end
 
-    # --complete option
-    # change the targets from functions to completions
-    if contains complete $opts
-        set type completion
-        set root "$HOME/.config/fish/completions"
-        set paths $fisn_complete_path
+    # switch the type: function/completion
+    test -n "$XDG_CONFIG_HOME"
+    and set config_home "$XDG_CONFIG_HOME"
+    or set config_home "$HOME/.config"
+
+    set -l config_fish "$config_home/fish"
+
+    set -l root
+    switch "$type"
+        case function
+            test -n "$def_function_path"
+            and set root "$def_function_path"
+            or set root "$config_fish"/functions
+        case completion
+            test -n "$def_complete_path"
+            and set root "$def_complete_path"
+            set root "$config_fish"/completions
     end
 
-    # --root option
-    # print the root path for functions/completions
-    if contains root $opts
-        echo "$root"
-        return
-    end
+    switch $option
+        case root # print the root path for functions/completions
+            echo $root
 
-    # --list option
-    # list functions/completions and exit
-    if contains list $opts
-        for path in $root/*.fish
-            if test "$path" = (realpath "$path" ^/dev/null; or echo)
-                basename -s '.fish' $path
+        case list # list functions/completions
+            for path in $root/*.fish
+                if test "$path" = (realpath "$path" ^/dev/null; or echo)
+                    basename -s '.fish' $path
+                end
             end
-        end
-        return
-    end
 
-    # --erase option
-    # erase functions/completions and exit
-    if contains erase $opts
-        set -l error 0
-        for name in $names
-            if test -f "$root/$name.fish"
-                rm "$root/$name.fish"
-                or set error (math $error + 1)
-            else
-                echo "$type '$name' is not in $root" >&2
-                set error (math $error + 1)
+        case erase # erase functions/completions
+            if not count $names >/dev/null
+                "def: $type name is required" >&2
+                return 1
             end
-        end
-        return $error
-    end
 
-    # check the number of arguments
-    if test (count $names) -gt 1
-        echo "def: too many arguments" >/dev/stderr
-        return 1
-    else if test -z "$names[1]"
-        echo "def: $type name is required"
-        return 1
-    end
+            set -l error 0
+            for name in $names
+                if test -f "$root/$name.fish"
+                    rm "$root/$name.fish"
+                    or set error (math $error + 1)
+                else
+                    echo "$type '$name' is not in $root" >&2
+                    set error (math $error + 1)
+                end
+            end
+            return $error
 
-    set -l name "$names[1]"
+        case edit
+            # check the number of arguments
+            if test (count $names) -gt 1
+                echo "def: too many arguments" >&2
+                return 1
+            else if test -z "$names[1]"
+                echo "def: $type name is required" >&2
+                return 1
+            else if string match -rq '^-|/' -- "$names"
+                echo "def: '$names' is an invalid function name" >&2
+                return 1
+            end
+            set -l name $names[1]
 
-    # check the function / completion names
-    if not string match -iqr '[a-z0-9_+:]+' "$name"
-        echo "def: invalid $type name '$name'"
-        return 1
-    end
+            # get the path of the function / completion
+            set -l path (string escape -n "$root/$name.fish")
 
-    # get the path of the function / completion
-    set -l path
-    for file in $paths/$name.fish
-        if test -f "$file"
-            set path "$file"
-            break
-        end
-    end
+            if functions -q $name
+                if test ! -f "$path" -a "$forced" = false # builtin or installed by fundle, fresco or omf
 
-    # an undefined function?
-    set -l undef 0
-    if test -z "$path"
-        set path "$root/$name.fish"
-        set undef 1
-    end
+                    echo "def: '$name' might be a builtin or defined by a plugin" >&2
+                    echo "      if you want to overwrite it, use --force option" >&2
+                    return 1
 
-    # a builtin function or function installed by fundle?
-    if not test "$path" = "$root/$name.fish"
-        echo "def: $type '$name' is not in $root" >/dev/stderr
-        return 1
-    end
+                else if test "$path" != (realpath "$path") -a "$forced" = false # installed by fisherman
 
-    # a function installed by fisherman？
-    if not test "$path" = (realpath "$path")
-        echo "def: $type '$name' in $root is an alias" >/dev/stderr
-        return 1
-    end
+                    echo "def: '$name' might be defined by a plugin" >&2
+                    echo "      if you want to overwrite it, use --force option" >&2
+                    return 1
 
-    # edit the function/completion
+                end
+            end
 
-    eval "$EDITOR $path"
+            command mkdir -p $root
+            or return 1
 
-    if test -f "$path"
-        if not contains complete $opts
-            source "$path"
-        else
-            complete -e >/dev/null
-        end
-    else
-        return 1
+            eval "$EDITOR $path"
+            or return 1
+            
+            if test -f "$path"
+                switch $type
+                    case function
+                        source "$path"
+                    case completion
+                        completion --erase >/dev/null
+                end
+            end
     end
 end
