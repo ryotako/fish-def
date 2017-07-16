@@ -101,6 +101,9 @@ OPTIONS:
             set -l error 0
             for name in $names
                 if test -f "$root/$name.fish"
+                    if test "$type" = function
+                        functions -e "$name"
+                    end
                     rm "$root/$name.fish"
                     or set error (math $error + 1)
                 else
