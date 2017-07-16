@@ -3,6 +3,8 @@
 [![Build Status][travis-badge]][travis-link]
 [![Slack Room][slack-badge]][slack-link]
 
+Manage your own functions/completions
+
 ## Install
 
 With [fisherman]
