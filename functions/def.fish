@@ -88,7 +88,7 @@ OPTIONS:
         case list # list functions/completions
             for path in $root/*.fish
                 if test "$path" = (realpath "$path" ^/dev/null; or echo)
-                    basename -s '.fish' $path
+                    basename "$path" .fish
                 end
             end
 
