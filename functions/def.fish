@@ -14,7 +14,7 @@ function def -d 'manage fish functions/complitons'
                 set names $names $value
 
             case -c --complete
-                set type completiotn
+                set type completion
 
             case -f --force
                 set forced true
@@ -78,7 +78,7 @@ OPTIONS:
         case completion
             test -n "$def_complete_path"
             and set root "$def_complete_path"
-            set root "$config_fish"/completions
+            or set root "$config_fish"/completions
     end
 
     switch $option
@@ -94,7 +94,7 @@ OPTIONS:
 
         case erase # erase functions/completions
             if not count $names >/dev/null
-                "def: $type name is required" >&2
+                echo "def: $type name is required" >&2
                 return 1
             end
 
@@ -149,13 +149,7 @@ OPTIONS:
             eval "$EDITOR $path"
             or return 1
             
-            if test -f "$path"
-                switch $type
-                    case function
-                        source "$path"
-                    case completion
-                        completion --erase >/dev/null
-                end
-            end
+            test -f "$path"
+            and source "$path"
     end
 end
