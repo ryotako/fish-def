@@ -21,9 +21,11 @@ function def -d 'manage fish functions/complitons'
                     set names $argv[2]
                     set -e $argv[2]
                 end
-            case '-*'
+            case '-?' '--*'
                 echo "def: invalid option '$argv[1]'" >/dev/stderr
                 return 1
+            case '-??*'
+                set argv $argv (string join \n -(string split -- '' "$argv[1]"))
             case '*'
                 set names $names $argv[1]
         end
@@ -46,6 +48,16 @@ OPTIONS:
     -h, --help      show this help
 "
         return
+    end
+
+    # check invalid option combination
+    set -l dups 0
+    contains erase $opts; and set dups (math $dups + 1)
+    contains list  $opts; and set dups (math $dups + 1)
+    contains root  $opts; and set dups (math $dups + 1)
+    if test $dups -gt 1
+        echo "def: invalid combination of options" >/dev/stderr
+        return 1
     end
 
     # --complete option
