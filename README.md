@@ -3,7 +3,15 @@
 [![Build Status][travis-badge]][travis-link]
 [![Slack Room][slack-badge]][slack-link]
 
-Manage your own functions/completions
+Manage your own functions/completions easily!
+
+The differences between `funced` is
+
+- `def` manages `*.fish` files directly without making temporary files.
+    - Edited file names are not changed at all times, so you can use undo-history of your editor.
+- You can remove the definition files `*.fish` themselves not only the function definitions.
+- When you edit, list or erase functions, ones installed with plugin managers are ignored.
+    - You can make your own function overwriting plugin's with `--force` option.
 
 ## Install
 
