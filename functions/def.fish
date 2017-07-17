@@ -1,5 +1,31 @@
 function def -d 'manage fish functions/complitons'
 
+    # --help option: show usage and exit
+    function __def_usage
+        echo "NAME: def - Manage your local function definitions"
+        echo
+        echo "USAGE: def [options] function ..."
+        echo
+        echo "OPTIONS:"
+        echo "    -c, --complete  edit/erase/list completions instead of functions"
+        echo "    -e, --erase     erase user defined functions"
+        echo "    -f, --force     overwirte function/completion defined by a plugin"
+        echo "    -l, --list      list user defined functions "
+        echo "    -r, --root      print root directory"
+        echo "    -h, --help      show this help"
+    end
+
+    # if the function is builtin or defined by a plugin, return 1
+    function __def_is_your_own -a name root
+        set -l path (string escape -n (realpath "$root")/"$name.fish")
+
+        if functions -q "$name"
+            test -f "$path" -a "$path" = (realpath "$path")
+            or return 1
+        end
+    end
+
+
     set -l key
     set -l value
     set -l type function
@@ -29,7 +55,8 @@ function def -d 'manage fish functions/complitons'
                 set option $option root
 
             case -h --help
-                set option $option help
+                __def_usage
+                return 1
         end
     end
 
@@ -37,26 +64,8 @@ function def -d 'manage fish functions/complitons'
         return 1
     end
 
-    # --help option: show usage and exit
-    if contains help $option
-        string trim "
-NAME: def - Manage your local function definitions
-
-USAGE: def [options] function ...
-
-OPTIONS:
-    -c, --complete  edit/erase/list completions instead of functions
-    -e, --erase     erase user defined functions
-    -f, --force     overwirte function/completion defined by a plugin
-    -l, --list      list user defined functions 
-    -r, --root      print root directory
-    -h, --help      show this help
-"
-        return
-    end
-
-    if test (count $option) -lt 1 # default action
-        set option edit
+    if test (count $option) -lt 1
+        set option edit # set default action
     else if test (count $option) -gt 1 # check invalid option combination
         echo "def: invalid combination of options" >&2
         return 1
@@ -87,6 +96,8 @@ OPTIONS:
 
         case list # list functions/completions
             for path in $root/*.fish
+                set path (string escape -n "$path")
+
                 if test "$path" = (realpath "$path" ^/dev/null; or echo)
                     basename "$path" .fish
                 end
@@ -100,18 +111,30 @@ OPTIONS:
 
             set -l error 0
             for name in $names
-                if test -f "$root/$name.fish"
-                    if test "$type" = function
-                        functions -e "$name"
-                    end
-                    rm "$root/$name.fish"
-                    or set error (math $error + 1)
-                else
+                set -l path (string escape -n "$root/$name.fish")
+
+                if not test -f "$path"
                     echo "$type '$name' is not in $root" >&2
                     set error (math $error + 1)
+                    continue
                 end
+
+                if begin; test "$forced" = false; and not __def_is_your_own "$name" "$root"; end
+
+                    echo "def: '$name' might be a builtin or defined by a plugin" >&2
+                    echo "      if you want to remove it, use --force option" >&2
+                    set error (math $error + 1)
+                    continue
+                end
+
+                if test "$type" = function
+                    functions -e "$name"
+                end
+
+                rm "$path"
+                or set error (math $error + 1)
             end
-            return $error
+            return $error # the number of failures
 
         case edit
             # check the number of arguments
@@ -125,29 +148,20 @@ OPTIONS:
                 echo "def: '$names' is an invalid function name" >&2
                 return 1
             end
+
             set -l name $names[1]
 
-            # get the path of the function / completion
-            set -l path (string escape -n "$root/$name.fish")
+            if begin; test "$forced" = false; and not __def_is_your_own "$name" "$root"; end
 
-            if functions -q $name
-                if test ! -f "$path" -a "$forced" = false # builtin or installed by fundle, fresco or omf
-
-                    echo "def: '$name' might be a builtin or defined by a plugin" >&2
-                    echo "      if you want to overwrite it, use --force option" >&2
-                    return 1
-
-                else if test "$path" != (realpath "$path") -a "$forced" = false # installed by fisherman
-
-                    echo "def: '$name' might be defined by a plugin" >&2
-                    echo "      if you want to overwrite it, use --force option" >&2
-                    return 1
-
-                end
+                echo "def: '$name' might be a builtin or defined by a plugin" >&2
+                echo "      if you want to overwrite it, use --force option" >&2
+                return 1
             end
 
             command mkdir -p $root
             or return 1
+
+            set -l path (string escape -n "$root/$name.fish")
 
             eval "$EDITOR $path"
             or return 1
