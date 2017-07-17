@@ -21,7 +21,7 @@ function def -d 'manage fish functions/complitons'
 
     # if the function is builtin or defined by a plugin, return 1
     function __def_is_your_own -a name root
-        set -l path (string escape -n (realpath "$root")/"$name.fish")
+        set -l path (realpath "$root")/"$name.fish"
 
         if functions -q "$name"
             test -f "$path" -a "$path" = (realpath "$path")
@@ -100,9 +100,8 @@ function def -d 'manage fish functions/complitons'
 
         case list # list functions/completions
             for path in $root/*.fish
-                set path (string escape -n "$path")
 
-                if test "$path" = (realpath "$path" ^/dev/null; or echo)
+                if __def_is_your_own "$name" "$root"
                     basename "$path" .fish
                 end
             end
@@ -115,7 +114,7 @@ function def -d 'manage fish functions/complitons'
 
             set -l error 0
             for name in $names
-                set -l path (string escape -n "$root/$name.fish")
+                set -l path "$root/$name.fish"
 
                 if not test -f "$path"
                     echo "$type '$name' is not in $root" >&2
@@ -165,9 +164,9 @@ function def -d 'manage fish functions/complitons'
             command mkdir -p $root
             or return 1
 
-            set -l path (string escape -n "$root/$name.fish")
+            set -l path "$root/$name.fish"
 
-            eval "$EDITOR $path"
+            eval "$EDITOR "(string escape $path)
             or return 1
             
             test -f "$path"
