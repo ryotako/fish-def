@@ -8,7 +8,7 @@ Manage your own functions/completions easily!
 The differences between `funced` is
 
 - `def` manages `*.fish` files directly without making temporary files.
-    - Edited file names are not changed at all times, so you can use undo-history of your editor.
+    - Edited file names are not changed at all times, so you can use undo-history of your editor.
 - You can remove the definition files `*.fish` themselves not only the function definitions.
 - When you edit, list or erase functions, ones installed with plugin managers are ignored.
     - You can make your own function overwriting plugin's with `--force` option.
@@ -47,6 +47,9 @@ def --force def
 
 ```
 def --erase foo # foo.fish is removed without confirmation.
+def --erase def
+def: 'def' might be a builtin or defined by a plugin
+      if you want to remove it, use --force option
 ```
 
 ### List up
@@ -62,9 +65,9 @@ def --list
 If you add `--complete` flag, you can edit, remove or list up completions instead of functions.
 
 ```fish
-def -c foo  # edit ~/.config/fish/completions
-def -ce foo # remove it
-def -cl     # list up the completions you wrote
+def -c foo         # edit ~/.config/fish/completions
+def -c --erase foo # remove it
+def -c --list      # list up the completions you wrote
 ```
 
 ## Setup
@@ -79,7 +82,8 @@ set -U def_complete_path ~/my/complete/dir
 The current root directories for function/completion definitions are printed by `--root` option.
 
 ```
-def -r # ~/my/function/dir
+def -r  # ~/my/function/dir
+def -cr # ~/my/complete/dir
 ```
 
 ## Install
