@@ -4,7 +4,7 @@ function def -d 'manage fish functions/complitons'
     function __def_usage
         echo "NAME: def - Manage your local function definitions"
         echo
-        echo "USAGE: def [options] function ..."
+        echo "USAGE: def [options] function-names..."
         echo
         echo "OPTIONS:"
         echo "    -c, --complete  edit/erase/list completions instead of functions"
@@ -13,6 +13,10 @@ function def -d 'manage fish functions/complitons'
         echo "    -l, --list      list user defined functions "
         echo "    -r, --root      print root directory"
         echo "    -h, --help      show this help"
+        echo
+        echo "VARIABLES:"
+        echo "    def_function_path  root directory for function definitions"
+        echo "    def_complete_path  root directory for completion definitions"
     end
 
     # if the function is builtin or defined by a plugin, return 1
