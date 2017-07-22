@@ -29,12 +29,11 @@ function def -d 'manage fish functions/complitons'
         end
     end
 
-
-    set -l key
+    set -l key unparsed
     set -l value
     set -l type function
     set -l names
-    set -l option
+    set -l action
     set -l forced false
 
     argu {c,complete} {e,erase} {f,force} {l,list} {r,root} {h,help}\
@@ -50,51 +49,51 @@ function def -d 'manage fish functions/complitons'
                 set forced true
 
             case -e --erase
-                set option $option erase
+                set action $action erase
 
             case -l --list
-                set option $option list
+                set action $action list
 
             case -r --root
-                set option $option root
+                set action $action root
 
             case -h --help
                 __def_usage
                 return 1
         end
     end
-
-    if test -z "$key" # option parsing error
+ 
+    # check options
+    if begin; count $argv >/dev/null; and test "$key" = unparsed; end # option parsing error
         return 1
-    end
-
-    if test (count $option) -lt 1
-        set option edit # set default action
-    else if test (count $option) -gt 1 # check invalid option combination
+    else if test (count $action) -gt 1 # invalid option combination
         echo "def: invalid combination of options" >&2
         return 1
     end
 
-    # switch the type: function/completion
-    test -n "$XDG_CONFIG_HOME"
-    and set config_home "$XDG_CONFIG_HOME"
-    or set config_home "$HOME/.config"
-
-    set -l config_fish "$config_home/fish"
-
-    set -l root
-    switch "$type"
-        case function
-            test -n "$def_function_path"
-            and set root "$def_function_path"
-            or set root "$config_fish"/functions
-        case completion
-            test -n "$def_complete_path"
-            and set root "$def_complete_path"
-            or set root "$config_fish"/completions
+    # set the default action
+    if test -z "$action"
+        set action (count $argv >/dev/null; and echo edit; or echo list)
     end
 
-    switch $option
+    # set the path to save functions/completions
+    set -l config_home (test -n "$XDG_CONFIG_HOME"
+        and echo "XDG_CONFIG_HOME"
+        or echo "$HOME/.config")
+    set -l config_fish "$config_home/fish"
+
+    set -l root (switch "$type"
+        case function
+            test -n "$def_function_path"
+            and echo "$def_function_path"
+            or echo "$config_fish"/functions
+        case completion
+            test -n "$def_complete_path"
+            and echo "$def_complete_path"
+            or echo "$config_fish"/completions
+    end)
+
+    switch $action
         case root # print the root path for functions/completions
             echo "$root"
 
