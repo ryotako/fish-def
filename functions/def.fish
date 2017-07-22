@@ -21,10 +21,10 @@ function def -d 'manage fish functions/complitons'
 
     # if the function is builtin or defined by a plugin, return 1
     function __def_is_your_own -a name root
-        set -l path (realpath "$root")/"$name.fish"
+        set -l path (realpath "$root" ^/dev/null; or echo "$root")/"$name.fish"
 
-        if functions -q "$name"
-            test -f "$path" -a "$path" = (realpath "$path")
+        if contains "$name" (functions -a)
+            test -f "$path" -a "$path" = (realpath "$path" ^/dev/null; or echo)
             or return 1
         end
     end
@@ -96,15 +96,10 @@ function def -d 'manage fish functions/complitons'
 
     switch $option
         case root # print the root path for functions/completions
-            echo $root
+            echo "$root"
 
         case list # list functions/completions
-            for path in $root/*.fish
-
-                if __def_is_your_own "$name" "$root"
-                    basename "$path" .fish
-                end
-            end
+            test -d "$root"; and ls -F "$root" | sed -n "s/\.fish\$//p"
 
         case erase # erase functions/completions
             if not count $names >/dev/null
@@ -168,7 +163,7 @@ function def -d 'manage fish functions/complitons'
 
             eval "$EDITOR "(string escape $path)
             or return 1
-            
+
             test -f "$path"
             and source "$path"
     end
