@@ -98,7 +98,13 @@ function def -d 'manage fish functions/complitons'
             echo "$root"
 
         case list # list functions/completions
-            test -d "$root"; and ls -F "$root" | sed -n "s/\.fish\$//p"
+            if test -d "$root"
+                ls -F "$root" | sed -n "s/\.fish\$//p"
+            end | if isatty stdout
+                cat - | string join ', '
+            else
+                cat -
+            end
 
         case erase # erase functions/completions
             if not count $names >/dev/null
