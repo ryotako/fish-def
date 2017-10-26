@@ -1,3 +1,4 @@
+:us: [:jp:](https://github.com/ryotako/fish-def/wiki)
 # fish-def
 
 [![Build Status][travis-badge]][travis-link]
