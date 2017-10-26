@@ -7,11 +7,10 @@ Manage your own functions/completions easily!
 
 The differences between `funced` is
 
-- `def` manages `*.fish` files directly without making temporary files.
-    - Edited file names are not changed at all times, so you can use undo-history of your editor.
-- You can remove the definition files `*.fish` themselves not only the function definitions.
-- When you edit, list or erase functions, ones installed with plugin managers are ignored.
-    - You can make your own function overwriting plugin's with `--force` option.
+- Manage `*.fish` files directly without making temporary files.
+    - So you can use undo-history of your editor.
+- Enable to remove a definition file `*.fish` itself not only the function definition.
+- Manage your own functions, ones installed with plugin managers are ignored.
 
 ## Usage
 
@@ -21,24 +20,11 @@ def [options] function-names...
 
 ### Edit
 
-Edit your function with `def`.
+Edit your function with `def`. If you want to overwrite a function provided by a plugin, use `--force` option
 
 ```fish
-def foo # EDITOR runs to edit ~/.config/fish/functions/foo.fish.
-```
-
-You cannot touch functions defined by fish itself or external plugins.
-
-```
-def def
-def: 'def' might be a builtin or defined by a plugin
-      if you want to overwrite it, use --force option
-```
-
-If you want to overwrite them, use `--force` option
-
-```
-def --force def
+def foo         # EDITOR runs to edit ~/.config/fish/functions/foo.fish.
+def --force def # overwrite a function provided by a plugin
 ```
 
 ### Erase
