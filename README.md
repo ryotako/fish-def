@@ -22,7 +22,7 @@ def [options] function-names...
 
 ### Edit
 
-Edit your function with `def`. If you want to overwrite a function provided by a plugin, use `--force` option
+Edit your function with `def`. If you want to overwrite a function provided by a plugin, use `--force(-f)` option
 
 ```fish
 def foo         # EDITOR runs to edit ~/.config/fish/functions/foo.fish.
@@ -31,7 +31,7 @@ def --force def # overwrite a function provided by a plugin
 
 ### Erase
 
-`functions -e` cannot remove autoload functions but `def -e` can do it.
+`functions --erase` cannot remove autoload functions but `def --erase(-e)` can do it.
 
 ```
 def --erase foo # foo.fish is removed without confirmation.
@@ -45,12 +45,12 @@ def: 'def' might be a builtin or defined by a plugin
 List up the function definitions you wrote. Aliases in `~/.config/fish/functions` are ignored.
 
 ```
-def --list
+def --list #, 'def -l', or 'def'
 ```
 
 ### Completios
 
-If you add `--complete` flag, you can edit, remove or list up completions instead of functions.
+If you add `--complete(-c)` flag, you can edit, remove or list up completions instead of functions.
 
 ```fish
 def -c foo         # edit ~/.config/fish/completions
