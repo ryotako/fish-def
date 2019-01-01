@@ -78,11 +78,11 @@ test "--erase --complete option"
 end
 
 test "--force option"
-    (def --force def) def = (def) (fisher update def ^/dev/null)
+    (def --force def) def = (def) (fisher add def ^/dev/null)
 end
 
 test "--force --complete option"
     (set -g EDITOR __test_def_completion_editor
-    def --force --complete def) "-a" = (complete -C"def -") (fisher update def ^/dev/null)
+    def --force --complete def) "-a" = (complete -C"def -") (fisher add def ^/dev/null)
 end
 
