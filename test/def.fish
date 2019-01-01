@@ -3,8 +3,9 @@
 #
 
 function setup
-    set -g __test_def_function_path (realpath (mktemp -d))
-    set -g __test_def_complete_path (realpath (mktemp -d))
+    mkdir ./tmp
+    set -g __test_def_function_path ./tmp
+    set -g __test_def_complete_path ./tmp
 
     set -g def_function_path "$__test_def_function_path"
     set -g def_complete_path "$__test_def_complete_path"
@@ -78,11 +79,11 @@ test "--erase --complete option"
 end
 
 test "--force option"
-    (def --force def) def = (def) (fisher add def ^/dev/null)
+    (def --force def) def = (def) (source ./functions/def.fish)
 end
 
 test "--force --complete option"
     (set -g EDITOR __test_def_completion_editor
-    def --force --complete def) "-a" = (complete -C"def -") (fisher add def ^/dev/null)
+    def --force --complete def) "-a" = (complete -C"def -")
 end
 
