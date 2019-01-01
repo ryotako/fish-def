@@ -3,7 +3,7 @@
 #
 
 function setup
-    mkdir ./tmp
+    mkdir ./tmp ^/dev/null
     set -g __test_def_function_path ./tmp
     set -g __test_def_complete_path ./tmp
 
@@ -13,6 +13,7 @@ function setup
 
     function __test_def_function_editor -a path
         set -l name (basename "$path" .fish)
+        touch "$path"
         begin
             echo "function $name"
             echo "  echo $name"
