@@ -2,7 +2,6 @@
 # fish-def
 
 [![Build Status][travis-badge]][travis-link]
-[![Slack Room][slack-badge]][slack-link]
 [![fish2.7.0](https://img.shields.io/badge/fish-2.7.0-brightgreen.svg)](https://github.com/fish-shell/fish-shell)
 
 Manage your own functions/completions easily!
